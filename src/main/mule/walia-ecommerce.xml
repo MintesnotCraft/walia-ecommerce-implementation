@@ -204,45 +204,7 @@ payload]]></ee:set-payload>
         </ee:transform>
     </flow>
     <flow name="get:\products:walia-ecommerce-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-[
-  {
-    product_id: 1,
-    name: "Samsung Galaxy S25",
-    quantity_in_stock: 120,
-    unit_price: 799.99
-  }, 
-  {
-    product_id: 2,
-    name: "Apple MacBook Pro",
-    quantity_in_stock: 80,
-    unit_price: 1299.99
-  }, 
-  {
-    product_id: 3,
-    name: "Bose SoundLink",
-    quantity_in_stock: 200,
-    unit_price: 129.99
-  }, 
-  {
-    product_id: 4,
-    name: "Fitbit Versa 3",
-    quantity_in_stock: 150,
-    unit_price: 229.99
-  }, 
-  {
-    product_id: 5,
-    name: "Sony WH-1000XM5",
-    quantity_in_stock: 180,
-    unit_price: 349.99
-  }
-] as Array {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <flow-ref doc:name="Flow Reference" doc:id="fea9f486-25fe-446a-9bf9-dc4addce73d9" name="walia-ecommerce-product-retrieve"/>
     </flow>
     <flow name="get:\customers\(customer_id):walia-ecommerce-config">
         <ee:transform doc:name="Transform Message">
@@ -271,39 +233,22 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="get:\products\(product_id):walia-ecommerce-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:variables>
-                <ee:set-variable variableName="product_id">attributes.uriParams.'product_id'</ee:set-variable>
-            </ee:variables>
-        </ee:transform>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  product_id: 5,
-  name: "Sony WH-1000XM5",
-  quantity_in_stock: 180,
-  unit_price: 349.99
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+        <set-variable value="#[attributes.uriParams.product_id]" doc:name="Set Variable" doc:id="cfdd01c2-1adb-4762-96b3-866687194d5e" variableName="product_id"/>
+        <flow-ref doc:name="Flow Reference" doc:id="6f624f01-8dc2-4482-aa91-6ca9ca56bb5c" name="walia-ecommerce-product-retrive-specific-products"/>
     </flow>
     <flow name="post:\login:application\json:walia-ecommerce-config">
         <flow-ref doc:name="Flow Reference" doc:id="2a73cbdd-9d9d-4b79-ad2b-45ea486d62e2" name="walia-ecommerce-users-login"/>
     </flow>
     <flow name="post:\products:application\json:walia-ecommerce-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
+        <ee:transform doc:name="Transform Message" doc:id="9315b925-cd2a-4f75-b0c1-e1bdd8b585fd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-{
-  message: "The product added successfully!"
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="d5b4e8de-c323-4035-8061-c09474d2b7bd" name="walia-ecommerce-product-creation"/>
     </flow>
     <flow name="post:\register:application\json:walia-ecommerce-config">
 		<set-variable value="#[payload.email]" doc:name="Set Variable" doc:id="8ff05726-f59b-4de9-8352-e0fcd026edbd" variableName="email"/>
