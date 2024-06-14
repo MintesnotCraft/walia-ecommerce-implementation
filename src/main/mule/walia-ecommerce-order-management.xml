@@ -74,8 +74,8 @@ output application/json
 	invoice_id: vars.invoice_id,
     number: vars.numb,
     user_id: vars.user_id,
-    invoice_total: vars.amount,
-    payment_total: vars.amount,
+    invoice_total: vars.amount default 0 * vars.birr default 0,
+    payment_total: vars.amount default 0 * vars.birr default 0,
     invoice_date: now() as String {format: "yyyy-MM-dd"},
     due_date: tomorrow(),
     payment_date: now() as String {format: "yyyy-MM-dd"}
@@ -87,7 +87,7 @@ output application/json
 	user_id: vars.user_id,
 	invoice_id: vars.invoice_id,
 	date: now() as String {format: "yyyy-MM-dd"},
-	amount: vars.amount,
+	amount: vars.amount default 0 * vars.birr default 0,
 	payment_method: 1
 }]]]></db:input-parameters>
 				</db:insert>
@@ -99,21 +99,25 @@ output application/json
 output application/json
 ---
 {
-	invoice_total: payload[0].invoice_id,
-	payment_total: payload[0].payment_total
+	invoice_total: payload[0].invoice_total,
+	payment_total: payload[0].payment_total,
+	invoice_id: payload[0].invoice_id
 }]]></ee:set-payload>
 					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="invoice_id_old" ><![CDATA[payload[0].invoice_id]]></ee:set-variable>
+					</ee:variables>
 				</ee:transform>
 				<db:update doc:name="Update" doc:id="960d6586-7323-4a60-854f-51f894ad6a4d" config-ref="WaliaEcommerce_Database_Config">
-					<db:sql ><![CDATA[update invoices set number=:number, invoice_total=:invoice_total, payment_total=:payment_total,invoice_date=:invoice_date, due_date=:due_date, payment_date=:payment_date where invoice_id = :invoice_id]]></db:sql>
+					<db:sql ><![CDATA[update invoices set number=:number, invoice_total=:invoice_total, payment_total=:payment_total,invoice_date=:invoice_date, due_date=:due_date, payment_date=:payment_date where user_id = :user_id]]></db:sql>
 					<db:input-parameters ><![CDATA[#[import tomorrow from dw::core::Dates
 ---
 {
-	invoice_id: vars.invoice_id,
+	invoice_id: payload.invoice_id,
     number: vars.numb,
     user_id: vars.user_id,
-    invoice_total: sum([vars.amount default 0, payload[0].invoice_total]),
-    payment_total: sum([vars.amount default 0, payload[0].payment_total]),
+    invoice_total: sum([(vars.amount default 0 * vars.birr default 0) as Number, payload.invoice_total as Number]),
+    payment_total: sum([(vars.amount default 0 * vars.birr default 0) as Number, payload.payment_total as Number]),
     due_date: tomorrow(),
     invoice_date: now() as String {format: "yyyy-MM-dd"},
     payment_date: now() as String {format: "yyyy-MM-dd"}
@@ -123,9 +127,9 @@ output application/json
 					<db:sql ><![CDATA[insert payments (user_id, invoice_id, date, amount, payment_method) values (:user_id, :invoice_id, :date, :amount, :payment_method)]]></db:sql>
 					<db:input-parameters ><![CDATA[#[{
 	user_id: vars.user_id,
-	invoice_id: vars.invoice_id,
+	invoice_id: vars.invoice_id_old,
 	date: now() as String {format: "yyyy-MM-dd"},
-	amount: vars.amount,
+	amount: (vars.amount default 0 * vars.birr default 0) as Number,
 	payment_method: 1
 }]]]></db:input-parameters>
 				</db:insert>

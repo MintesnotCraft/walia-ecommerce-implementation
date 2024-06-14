@@ -28,6 +28,10 @@ The project is structured into the following main components:
 ### To secure the property file
 java -cp secure-properties-tool.jar com.mulesoft.tools.SecurePropertiesTool file encrypt Blowfish CBC waliacoders local-unencrypted.yaml local.yaml
 
+### Create a kafka topic
+For Windows: kafka-topics.bat --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+For Mac: ./kafka-topics.sh --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
 ### Clone the Repository
 ```bash
 git clone https://github.com/MintesnotCraft/walia-ecommerce-implementation.git

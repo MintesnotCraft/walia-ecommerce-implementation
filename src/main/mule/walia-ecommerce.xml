@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
-http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd">
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
     <apikit:config name="walia-ecommerce-config" api="resource::0803abe7-b1fe-478b-beb1-297c994ca040:walia-ecommerce:1.0.0:raml:zip:walia-ecommerce.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
 	<flow name="walia-ecommerce-main">
         <http:listener path="/api/*" config-ref="walia-ecommerce-httpListenerConfig">
@@ -344,5 +345,25 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+	</flow>
+	<flow name="walia-ecommerceFlow" doc:id="a2e28155-f40f-4b6e-9e1e-71aa22488f63" >
+		<scheduler doc:name="Scheduler" doc:id="d5ca9433-1ae9-4808-9675-c003048db16a" >
+			<scheduling-strategy >
+				<cron expression="0 0 0 ? * 6 *" />
+			</scheduling-strategy>
+		</scheduler>
+		<db:select doc:name="Select" doc:id="416e1008-19ef-4484-b899-cf2e6c2e6eaa" config-ref="WaliaEcommerce_Database_Config">
+			<db:sql ><![CDATA[select * from invoices]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="33dda003-ff52-40b3-86d0-539a6b26b3a3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="70e42aa3-1670-44af-90a7-abba151262b4" path="#['walia-' ++ (now() as String {format:'yyyy-MM-dd-hh-mm-ss'} ) ++ '.json']" config-ref="File_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3e886110-3ab8-4aef-8663-95aec25d8cc0" message="----------- Successfully write the invoices to our file server -----------"/>
 	</flow>
 </mule>
