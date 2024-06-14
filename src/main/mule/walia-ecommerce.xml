@@ -297,7 +297,7 @@ output application/json
 				<ee:set-variable variableName="order_id" ><![CDATA["w" ++ " " ++ now()]]></ee:set-variable>
 				<ee:set-variable variableName="product_id" ><![CDATA[attributes.queryParams.product_id]]></ee:set-variable>
 				<ee:set-variable variableName="note" ><![CDATA[attributes.queryParams.note]]></ee:set-variable>
-				<ee:set-variable variableName="comments" ><![CDATA[attributes.queryParams.comments]]></ee:set-variable>
+				<ee:set-variable variableName="comments" ><![CDATA[payload.comments]]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
 		<flow-ref doc:name="Flow Reference" doc:id="ebdedaae-e520-40ad-aa86-398d45cc27c7" name="walia-ecommerce-order-managementSub_Flow"/>
@@ -346,7 +346,7 @@ output application/json
 			</ee:message>
 		</ee:transform>
 	</flow>
-	<flow name="walia-ecommerceFlow" doc:id="a2e28155-f40f-4b6e-9e1e-71aa22488f63" >
+	<flow name="walia-ecommerce-scheduled-invoice-to-file-write" doc:id="a2e28155-f40f-4b6e-9e1e-71aa22488f63" >
 		<scheduler doc:name="Scheduler" doc:id="d5ca9433-1ae9-4808-9675-c003048db16a" >
 			<scheduling-strategy >
 				<cron expression="0 0 0 ? * 6 *" />
@@ -366,7 +366,7 @@ payload]]></ee:set-payload>
 		<file:write doc:name="Write" doc:id="70e42aa3-1670-44af-90a7-abba151262b4" path="#['walia-' ++ (now() as String {format:'yyyy-MM-dd-hh-mm-ss'} ) ++ '.json']" config-ref="File_Config"/>
 		<logger level="INFO" doc:name="Logger" doc:id="3e886110-3ab8-4aef-8663-95aec25d8cc0" message="----------- Successfully write the invoices to our file server -----------"/>
 	</flow>
-	<flow name="walia-ecommerceFlow1" doc:id="c224e829-84ee-49f9-948b-2ceb082e1f43" >
+	<flow name="walia-ecommerce-execute-script" doc:id="c224e829-84ee-49f9-948b-2ceb082e1f43" >
 		<http:listener doc:name="Listener" doc:id="bbee440a-b787-4549-9092-0aeccd09ff9b" config-ref="walia-ecommerce-httpListenerConfig" path="/executeScript"/>
 		<db:execute-script doc:name="Execute script" doc:id="fd7170c3-fe54-4d1a-a2aa-1753d92d8dd1" config-ref="WaliaEcommerce_Database_Config">
 			<db:sql ><![CDATA[DROP DATABASE IF EXISTS `waliaecommerce`;

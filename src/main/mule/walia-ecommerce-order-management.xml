@@ -56,7 +56,11 @@ output application/json
 		</db:insert>
 		<first-successful doc:name="First Successful" doc:id="67110853-4bc8-4a26-a395-ed89245b46b8" >
 			<route >
-				<jms:publish doc:name="Publish" doc:id="ae3f454e-bfd7-4866-9cb1-13131b4e2a49" destination="walia-ecommerce" />
+				<jms:publish doc:name="Publish" doc:id="ae3f454e-bfd7-4866-9cb1-13131b4e2a49" destination="walia-ecommerce" config-ref="JMS_Config">
+					<jms:message >
+						<jms:body ><![CDATA[#[vars.comments]]]></jms:body>
+					</jms:message>
+				</jms:publish>
 			</route>
 			<route >
 				<kafka:publish doc:name="Publish" doc:id="559627ad-c76f-4da3-89bb-5c3ee7c9f0ff" topic="walia-ecommerce" config-ref="Apache_Kafka_Producer_configuration" key="#[vars.order_id]">
