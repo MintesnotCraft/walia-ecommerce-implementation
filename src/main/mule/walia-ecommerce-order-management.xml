@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd">
+http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="7a583f0c-5bf8-42b7-9896-0f545f81b584" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
 	<sub-flow name="walia-ecommerce-order-managementSub_Flow" doc:id="92efcb2c-1eea-492f-b6f9-20610d1acbde" >
 		<db:insert doc:name="Insert" doc:id="093a2164-bf8f-46eb-b674-b76ae0bb5939" config-ref="WaliaEcommerce_Database_Config">
 			<db:sql ><![CDATA[insert into orders (order_id, user_id, order_date, status, comments, shipper_id) values 
@@ -53,9 +59,16 @@ output application/json
 	note: vars.note
 }]]]></db:input-parameters>
 		</db:insert>
-		<kafka:publish doc:name="Publish" doc:id="559627ad-c76f-4da3-89bb-5c3ee7c9f0ff" topic="walia-ecommerce" config-ref="Apache_Kafka_Producer_configuration" key="#[vars.order_id]">
-			<kafka:message ><![CDATA[#[vars.comments]]]></kafka:message>
+		<first-successful doc:name="First Successful" doc:id="67110853-4bc8-4a26-a395-ed89245b46b8" >
+			<route >
+				<jms:publish doc:name="Publish" doc:id="ae3f454e-bfd7-4866-9cb1-13131b4e2a49" config-ref="JMS_Config" destination="walia-ecommerce" />
+			</route>
+			<route >
+				<kafka:publish doc:name="Publish" doc:id="559627ad-c76f-4da3-89bb-5c3ee7c9f0ff" topic="walia-ecommerce" config-ref="Apache_Kafka_Producer_configuration" key="#[vars.order_id]">
+			<kafka:message><![CDATA[#[vars.comments]]]></kafka:message>
 		</kafka:publish>
+			</route>
+		</first-successful>
 	</sub-flow>
 	<sub-flow name="walia-ecommerce-payment-Sub_Flow" doc:id="bfc8a0d7-6f2b-44f1-a633-1a65cf1b4647" >
 		<db:select doc:name="Select" doc:id="7a9869ca-41bb-4e2f-895b-cdbe7654b132" config-ref="WaliaEcommerce_Database_Config">
