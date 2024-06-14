@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
-	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
-	xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway"
+	xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:kafka="http://www.mulesoft.org/schema/mule/kafka" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:email="http://www.mulesoft.org/schema/mule/email" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd
@@ -11,7 +11,8 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 http://www.mulesoft.org/schema/mule/kafka http://www.mulesoft.org/schema/mule/kafka/current/mule-kafka.xsd
 http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
 http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
-http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
 	<db:config name="WaliaEcommerce_Database_Config" doc:name="Database Config" doc:id="135f58bb-2444-4159-b2bb-b0b2817c9fce" >
 		<db:my-sql-connection host="${secure::database.host}" port="${secure::database.port}" user="${secure::database.username}" password="${secure::database.password}" database="waliaecommerce"/>
 	</db:config>
@@ -46,4 +47,9 @@ http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/fil
 	<file:config name="File_Config" doc:name="File Config" doc:id="35a50894-d75c-40af-8b37-db48dcd33c21" >
 		<file:connection workingDir="C:\Users\craft\AnypointStudio\studio-workspace\walia-ecommerce\src\main\resources\walia-ecommerce" />
 	</file:config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="6eee5f21-e699-49a1-b533-c42fb0fe9b4e" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
 </mule>
