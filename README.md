@@ -32,6 +32,31 @@ java -cp secure-properties-tool.jar com.mulesoft.tools.SecurePropertiesTool file
 For Windows: kafka-topics.bat --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 For Mac: ./kafka-topics.sh --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 
+
+### Deploy using Jenkins
+I already add the cloud hub configuration in the pom.xml file so you don't need to add
+
+```xml
+<cloudHubDeployment>
+						<uri>https://anypoint.mulesoft.com</uri>
+						<muleVersion>${mule.version}</muleVersion>
+						<username>${anypoint.username}</username>
+						<password>${anypoint.password}</password>
+						<applicationName>${appname}</applicationName>
+						<businessGroup>${business}</businessGroup>
+						<environment>${env}</environment>
+						<workerType>${vCore}</workerType>
+						<workers>${workers}</workers>
+						<objectStoreV2>true</objectStoreV2>
+					</cloudHubDeployment>
+```
+
+So in the maven deploy section run this command:
+
+```bash
+mvn clean deploy -DmuleDeploy -DskipTests -Dmule.version=4.3.0 -Danypoint.username=yourusername -Danypoint.password=yourpassword -Denv=Sandbox -Dappname=walia-ecommerce -Dbusiness=MuleSoft -DvCore=Micro -Dworkers=1 
+```
+
 ### Clone the Repository
 ```bash
 git clone https://github.com/MintesnotCraft/walia-ecommerce-implementation.git
