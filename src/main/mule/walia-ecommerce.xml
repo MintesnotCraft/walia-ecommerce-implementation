@@ -366,4 +366,151 @@ payload]]></ee:set-payload>
 		<file:write doc:name="Write" doc:id="70e42aa3-1670-44af-90a7-abba151262b4" path="#['walia-' ++ (now() as String {format:'yyyy-MM-dd-hh-mm-ss'} ) ++ '.json']" config-ref="File_Config"/>
 		<logger level="INFO" doc:name="Logger" doc:id="3e886110-3ab8-4aef-8663-95aec25d8cc0" message="----------- Successfully write the invoices to our file server -----------"/>
 	</flow>
+	<flow name="walia-ecommerceFlow1" doc:id="c224e829-84ee-49f9-948b-2ceb082e1f43" >
+		<http:listener doc:name="Listener" doc:id="bbee440a-b787-4549-9092-0aeccd09ff9b" config-ref="walia-ecommerce-httpListenerConfig" path="/executeScript"/>
+		<db:execute-script doc:name="Execute script" doc:id="fd7170c3-fe54-4d1a-a2aa-1753d92d8dd1" config-ref="WaliaEcommerce_Database_Config">
+			<db:sql ><![CDATA[DROP DATABASE IF EXISTS `waliaecommerce`;
+CREATE DATABASE `waliaecommerce`;
+USE `waliaecommerce`;
+
+CREATE TABLE `products` (
+  `product_id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `quantity_in_stock` int(11) NOT NULL,
+  `unit_price` double NOT NULL,
+  PRIMARY KEY (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+
+CREATE TABLE `shippers` (
+  `shipper_id` smallint(6) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`shipper_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+INSERT INTO `shippers` (`name`) VALUES ('Walia Express');
+INSERT INTO `shippers` (`name`) VALUES ('Craft Express');
+INSERT INTO `shippers` (`name`) VALUES ('UPS');
+INSERT INTO `shippers` (`name`) VALUES ('FedEx');
+INSERT INTO `shippers` (`name`) VALUES ('DHL');
+INSERT INTO `shippers` (`name`) VALUES ('USPS');
+
+
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL AUTO_INCREMENT,
+  `first_name` varchar(50) NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `user_name` varchar(255) NOT NULL unique,
+  `password` varchar(255) NOT NULL,
+  `birth_date` date DEFAULT NULL,
+  `phone` varchar(50) DEFAULT NULL,
+  `email` varchar(255) NOT NULL unique,
+  `address` varchar(50) NOT NULL,
+  `role` ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+  `points` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+
+CREATE TABLE `order_statuses` (
+  `order_status_id` tinyint(4) NOT NULL,
+  `order_status` ENUM('Pending','Processed', 'Shipped', 'Delivered') NOT NULL DEFAULT 'Pending',
+  PRIMARY KEY (`order_status_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+INSERT INTO `order_statuses` (`order_status_id`, `order_status`) VALUES (1, 'Pending');
+INSERT INTO `order_statuses` (`order_status_id`, `order_status`) VALUES (2, 'Processed');
+INSERT INTO `order_statuses` (`order_status_id`, `order_status`) VALUES (3, 'Shipped');
+INSERT INTO `order_statuses` (`order_status_id`, `order_status`) VALUES (4, 'Delivered');
+
+
+
+CREATE TABLE `orders` (
+  `order_id` varchar(255) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `order_date` date NOT NULL,
+  `status` tinyint(4) NOT NULL DEFAULT '1',
+  `comments` varchar(2000) DEFAULT NULL,
+  `shipped_date` date DEFAULT NULL,
+  `shipper_id` smallint(6) DEFAULT NULL,
+  PRIMARY KEY (`order_id`),
+  KEY `fk_orders_users_idx` (`user_id`),
+  KEY `fk_orders_shippers_idx` (`shipper_id`),
+  KEY `fk_orders_order_statuses_idx` (`status`),
+  CONSTRAINT `fk_orders_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_orders_order_statuses` FOREIGN KEY (`status`) REFERENCES `order_statuses` (`order_status_id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_orders_shippers` FOREIGN KEY (`shipper_id`) REFERENCES `shippers` (`shipper_id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `order_items` (
+  `order_id` varchar(255) NOT NULL ,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit_price` double NOT NULL,
+  PRIMARY KEY (`order_id`,`product_id`),
+  KEY `fk_order_items_products_idx` (`product_id`),
+  CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `order_item_notes` (
+  `note_id` INT NOT NULL AUTO_INCREMENT,
+  `order_id` varchar(255) NOT NULL,
+  `product_id` INT NOT NULL,
+  `note` VARCHAR(255) NOT NULL,
+  PRIMARY KEY (`note_id`));
+
+CREATE TABLE `payment_methods` (
+  `payment_method_id` tinyint(4) NOT NULL AUTO_INCREMENT,
+  `payment_method` ENUM('Credit Card', 'Stripe', 'PayPal', 'Direct Payment') NOT NULL DEFAULT 'Direct Payment',
+  PRIMARY KEY (`payment_method_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+INSERT INTO `payment_methods` (`payment_method`) VALUES ('Credit Card');
+INSERT INTO `payment_methods` (`payment_method`) VALUES ('Stripe');
+INSERT INTO `payment_methods` (`payment_method`) VALUES ('PayPal');
+INSERT INTO `payment_methods` (`payment_method`) VALUES ('Direct Payment');
+
+CREATE TABLE `invoices` (
+  `invoice_id` BIGINT NOT NULL,
+  `number` varchar(50) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `invoice_total` double NOT NULL,
+  `payment_total` double NOT NULL DEFAULT '0.00',
+  `invoice_date` date NOT NULL,
+  `due_date` date NOT NULL,
+  `payment_date` date DEFAULT NULL,
+  PRIMARY KEY (`invoice_id`),
+  KEY `FK_user_id` (`user_id`),
+  CONSTRAINT `FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `payments` (
+  `payment_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `invoice_id` BIGINT NOT NULL,
+  `date` date NOT NULL,
+  `amount` double NOT NULL,
+  `payment_method` tinyint(4) NOT NULL,
+  PRIMARY KEY (`payment_id`),
+  KEY `fk_user_id_idx` (`user_id`),
+  KEY `fk_invoice_id_idx` (`invoice_id`),
+  KEY `fk_payment_payment_method_idx` (`payment_method`),
+  CONSTRAINT `fk_payment_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_payment_invoice` FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`invoice_id`) ON UPDATE CASCADE,
+  CONSTRAINT `fk_payment_payment_method` FOREIGN KEY (`payment_method`) REFERENCES `payment_methods` (`payment_method_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;]]></db:sql>
+		</db:execute-script>
+		<ee:transform doc:name="Transform Message" doc:id="3586e681-32ea-4d28-a55b-d4dd8c787807" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "You successfully execute the script!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 </mule>
