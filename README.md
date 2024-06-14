@@ -20,11 +20,15 @@ The project is structured into the following main components:
 ## Prerequisites
 - MuleSoft Anypoint Platform
 - Anypoint Studio 7.x
-- Java JDK 8 or 11
+- Java JDK 8,11 or 17
 - Git
 
 ## Getting Started
 
+### To secure the property file
+java -cp secure-properties-tool.jar com.mulesoft.tools.SecurePropertiesTool file encrypt Blowfish CBC waliacoders local-unencrypted.yaml local.yaml
+
 ### Clone the Repository
 ```bash
 git clone https://github.com/MintesnotCraft/walia-ecommerce-implementation.git
+

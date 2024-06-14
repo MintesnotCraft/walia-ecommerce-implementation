@@ -145,7 +145,8 @@ output application/json
                 <ee:set-variable variableName="product_id">attributes.uriParams.'product_id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
+        <flow-ref doc:name="Flow Reference" doc:id="34fa1bd1-fffa-484c-b7c5-b7107ee1b65f" name="walia-ecommerce-product-delete"/>
+		<ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -179,7 +180,8 @@ output application/json
                 <ee:set-variable variableName="product_id">attributes.uriParams.'product_id'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
+        <flow-ref doc:name="Flow Reference" doc:id="72abeb77-c8ab-45dc-9b90-0ece36d7bc7f" name="walia-ecommerce-product-update"/>
+		<ee:transform doc:name="Transform Message">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -274,4 +276,73 @@ output application/json
             </ee:message>
         </ee:transform>
     </flow>
+	<flow name="walia-ecommerce-orders" doc:id="4ec4e094-3974-428c-b18d-d89f892c06f2" >
+		<http:listener doc:name="Listener" doc:id="0fd3d8ea-3bfc-49d6-b457-23ff2429f103" config-ref="walia-ecommerce-httpListenerConfig" path="/api/orders" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="7837ded3-1711-4152-ab68-ff8c271610e9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"user_id": attributes.queryParams.user_id,
+	"order_date": now() as String {format: "yyyy-MM-dd"},
+	"status": 1
+}
+
+
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="order_id" ><![CDATA["w" ++ " " ++ now()]]></ee:set-variable>
+				<ee:set-variable variableName="product_id" ><![CDATA[attributes.queryParams.product_id]]></ee:set-variable>
+				<ee:set-variable variableName="note" ><![CDATA[attributes.queryParams.note]]></ee:set-variable>
+				<ee:set-variable variableName="comments" ><![CDATA[attributes.queryParams.comments]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="ebdedaae-e520-40ad-aa86-398d45cc27c7" name="walia-ecommerce-order-managementSub_Flow"/>
+		<ee:transform doc:name="Transform Message" doc:id="a9acb6b7-51e5-4c51-bfa1-eddfb1a88a53" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Your order is processed successfully! You can continue to payment"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="walia-ecommerce-payment" doc:id="4d27c9fb-39cd-49f1-a5d2-444b5bfa8502" >
+		<http:listener doc:name="Listener" doc:id="51f9557b-e15f-41d5-b774-8f3657267522" config-ref="walia-ecommerce-httpListenerConfig" path="/pay" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="bbcd8e6f-8a50-47c7-84d7-4e2001f77ffb">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="invoice_id"><![CDATA[floor((random()*1000000000000) as Number)]]></ee:set-variable>
+				<ee:set-variable variableName="order_id"><![CDATA[attributes.queryParams.order_id]]></ee:set-variable>
+				<ee:set-variable variableName="user_id" ><![CDATA[attributes.queryParams.user_id]]></ee:set-variable>
+				<ee:set-variable variableName="amount" ><![CDATA[attributes.queryParams.amount]]></ee:set-variable>
+				<ee:set-variable variableName="numb" ><![CDATA[attributes.queryParams.numb]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<http:request method="GET" doc:name="Request" doc:id="4d8e1784-890c-4a4f-ba5e-c6dee5b4ff25" path="/rates/latest" config-ref="HTTP_Request_configuration">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"symbols" : "ETB",
+	"apikey" : "7957fca899574c3cab77cf696b9fbeea"
+}]]]></http:query-params>
+		</http:request>
+		<set-variable value="#[floor(payload.rates.ETB as Number)]" doc:name="Set Variable" doc:id="a427e4eb-20ec-4838-a554-b9c3c53ba93e" variableName="birr"/>
+		<flow-ref doc:name="Flow Reference" doc:id="de4b3bc8-766f-4d90-b751-a700d79a2057" name="walia-ecommerce-payment-Sub_Flow"/>
+		<ee:transform doc:name="Transform Message" doc:id="e9134417-e63b-4005-8b66-dedc8ea27612" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Your payment is processed successfully!"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 </mule>

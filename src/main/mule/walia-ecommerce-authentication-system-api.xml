@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
-	xmlns:db="http://www.mulesoft.org/schema/mule/db"
-	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
 	<sub-flow name="walia-ecommerce-users-registration" doc:id="668b2eb0-5df8-4e1a-bbab-c28f595250e0" >
 		<try doc:name="Try" doc:id="6424c638-4be4-4901-a9e4-24562facdf9f" >
 			<validation:all doc:name="All" doc:id="28aca2e0-8da2-4463-9b6f-18442e5d3539">
@@ -47,7 +48,9 @@ output application/json
 			</ee:message>
 		</ee:transform>
 		<try doc:name="Try" doc:id="87affe6a-60a5-4ae9-a383-642709445144" >
-			<db:insert doc:name="Insert" doc:id="fe8852e4-b3d0-4c91-8aae-9f1d926ca8a3" config-ref="WaliaEcommerce_Database_Config">
+			<scatter-gather doc:name="Scatter-Gather" doc:id="34d99a0d-d482-48b3-bf41-9745346278dd" >
+				<route >
+					<db:insert doc:name="Insert" doc:id="fe8852e4-b3d0-4c91-8aae-9f1d926ca8a3" config-ref="WaliaEcommerce_Database_Config">
 			<db:sql><![CDATA[insert into users (first_name, last_name, user_name, password, birth_date, phone, email, address) values (:first_name, :last_name, :user_name, :password, :birth_date, :phone, :email, :address)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{
 	first_name: payload.first_name,
@@ -60,6 +63,28 @@ output application/json
 	address: payload.address
 }]]]></db:input-parameters>
 		</db:insert>
+				</route>
+				<route >
+					<ee:transform doc:name="Transform Message" doc:id="6a18ed09-cae1-4bc4-b8cc-8cc23b17f700" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[
+   { 
+      "FirstName": payload.first_name,
+      "LastName": payload.last_name,
+      "Phone": payload.phone,
+      "Email": payload.email,
+      "Address": payload.address
+   }
+]]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<salesforce:create doc:name="Create" doc:id="4ef18d94-76f1-410b-a101-e2a0c0efc6af" config-ref="Salesforce_Config" type="Lead">
+					</salesforce:create>
+				</route>
+			</scatter-gather>
 			<error-handler >
 				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="6c7e7efa-a1c6-4d6a-83f7-a2e26a2973a0" type="DB:QUERY_EXECUTION">
 					<ee:transform doc:name="Transform Message" doc:id="b4de1c92-07f8-4727-8ff7-42946673aeb5" >

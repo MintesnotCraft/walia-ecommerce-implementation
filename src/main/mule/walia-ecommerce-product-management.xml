@@ -74,15 +74,15 @@ output application/json
 		</error-handler>
 	</flow>
 	<flow name="walia-ecommerce-product-update" doc:id="42bc1f43-9479-4faa-9537-dfb3055ff33a" >
-		<db:bulk-update doc:name="Bulk update" doc:id="24759e35-8ab5-428c-a10d-ebc77dd02566" config-ref="WaliaEcommerce_Database_Config" >
-			<db:bulk-input-parameters ><![CDATA[#[payload map ((item, index) -> {
-	"product_id": item.product_id,
-    "name": item.name,
-    "quantity_in_stock": item.quantity_in_stock,
-    "unit_price": item.unit_price
-})]]]></db:bulk-input-parameters>
+		<db:update doc:name="Update" doc:id="cf9efa1c-5c54-4405-aeb0-1d592fb936bb" config-ref="WaliaEcommerce_Database_Config">
 			<db:sql ><![CDATA[update products set quantity_in_stock=:quantity_in_stock, unit_price=:unit_price, name=:name where product_id=:product_id;]]></db:sql>
-		</db:bulk-update>
+			<db:input-parameters ><![CDATA[#[{
+	"unit_price": payload.unit_price,
+	"quantity_in_stock": payload.quantity_in_stock,
+	"name": payload.name,
+	"product_id": vars.product_id
+}]]]></db:input-parameters>
+		</db:update>
 	</flow>
 	<sub-flow name="walia-ecommerce-product-retrieve" doc:id="39400322-8771-4d82-bde6-f09cbcecf8ad" >
 		<db:select doc:name="Select" doc:id="9692de7a-d5dd-411d-8b22-ae1bc28141d7" config-ref="WaliaEcommerce_Database_Config">
@@ -112,5 +112,13 @@ output application/json
 payload[0]]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+	</sub-flow>
+	<sub-flow name="walia-ecommerce-product-delete" doc:id="efca9fbe-5be0-45a1-9098-c84056cef3b8" >
+		<db:delete doc:name="Delete" doc:id="d181033c-f061-4d67-aa67-95cfac69a591" config-ref="WaliaEcommerce_Database_Config">
+			<db:sql ><![CDATA[delete from products where product_id = :product_id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	product_id: vars.product_id
+}]]]></db:input-parameters>
+		</db:delete>
 	</sub-flow>
 </mule>
