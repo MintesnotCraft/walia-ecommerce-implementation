@@ -29,9 +29,14 @@ The project is structured into the following main components:
 java -cp secure-properties-tool.jar com.mulesoft.tools.SecurePropertiesTool file encrypt Blowfish CBC waliacoders local-unencrypted.yaml local.yaml
 
 ### Create a kafka topic
-For Windows: kafka-topics.bat --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
-For Mac: ./kafka-topics.sh --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
-
+- For Windows:
+```bash
+ kafka-topics.bat --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+ ```
+- For Mac: 
+```bash
+./kafka-topics.sh --create --topic walia_ecommerce --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+ ```
 
 ### Deploy using Jenkins
 I already add the cloud hub configuration in the pom.xml file so you don't need to add
