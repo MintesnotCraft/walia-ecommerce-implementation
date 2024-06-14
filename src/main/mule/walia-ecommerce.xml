@@ -313,7 +313,7 @@ output application/json
 		</ee:transform>
 	</flow>
 	<flow name="walia-ecommerce-payment" doc:id="4d27c9fb-39cd-49f1-a5d2-444b5bfa8502" >
-		<http:listener doc:name="Listener" doc:id="51f9557b-e15f-41d5-b774-8f3657267522" config-ref="walia-ecommerce-httpListenerConfig" path="/pay" allowedMethods="POST"/>
+		<http:listener doc:name="Listener" doc:id="51f9557b-e15f-41d5-b774-8f3657267522" config-ref="walia-ecommerce-httpListenerConfig" path="/api/pay" allowedMethods="POST"/>
 		<ee:transform doc:name="Transform Message" doc:id="bbcd8e6f-8a50-47c7-84d7-4e2001f77ffb">
 			<ee:message>
 			</ee:message>
